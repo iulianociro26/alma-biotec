@@ -579,7 +579,6 @@ print(f"--- CORE AI {AZIENDA} - ARCHIVIO BREVETTI AGGIORNATO ---")
 display(input_nome, input_domanda, pulsante_invia, area_output)
 
 # 1. Installazione automatica della libreria per le ricerche web
-!pip install wikipedia-api -q
 
 import ipywidgets as widgets
 from IPython.display import display, clear_output
