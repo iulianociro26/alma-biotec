@@ -1674,7 +1674,6 @@ with tab3:
 
 !curl ipv4.icanhazip.com
 
-!pip install streamlit wikipedia-api -q
 !streamlit run app.py & npx localtunnel --port 8501
 
 !pip install streamlit wikipedia-api -q
