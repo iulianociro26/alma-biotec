@@ -458,7 +458,6 @@ print(f"--- CORE AI {AZIENDA} - GESTIONE BREVETTI & RICERCA ---")
 display(input_nome, input_domanda, pulsante_invia, area_output)
 
 # Installazione della libreria Wikipedia
-!pip install wikipedia-api -q
 
 import ipywidgets as widgets
 from IPython.display import display, clear_output
