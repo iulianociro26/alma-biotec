@@ -1672,8 +1672,6 @@ with tab3:
 #             else:
 #                 st.error(f"Impossibile reperire informazioni su '{cerca_p}'.")
 
-!curl ipv4.icanhazip.com
-
 !streamlit run app.py & npx localtunnel --port 8501
 
 !pip install streamlit wikipedia-api -q
