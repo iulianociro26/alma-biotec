@@ -1672,7 +1672,6 @@ with tab3:
 #             else:
 #                 st.error(f"Impossibile reperire informazioni su '{cerca_p}'.")
 
-!streamlit run app.py & npx localtunnel --port 8501
 
 !pip install streamlit wikipedia-api -q
 # Avviamo l'app usando un ponte alternativo immediato su localhost.run
