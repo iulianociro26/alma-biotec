@@ -1674,4 +1674,3 @@ with tab3:
 
 
 # Avviamo l'app usando un ponte alternativo immediato su localhost.run
-!streamlit run app.py & ssh -o StrictHostKeyChecking=no -R 80:localhost:8501 nokey@localhost.run
