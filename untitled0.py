@@ -238,7 +238,6 @@ print(f"--- INTERFACCIA DI APPRENDIMENTO CONTINUO {AZIENDA} ---")
 display(input_nome, input_domanda, pulsante_invia, area_output)
 
 # Prima di tutto installiamo la libreria per le ricerche (esegui questo comando)
-!pip install wikipedia-api
 
 import ipywidgets as widgets
 from IPython.display import display, clear_output
