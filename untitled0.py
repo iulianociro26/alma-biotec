@@ -327,7 +327,6 @@ print(f"--- INTERFACCIA REALE DI RICERCA {AZIENDA} ---")
 display(input_nome, input_domanda, pulsante_invia, area_output)
 
 # Installazione della libreria Wikipedia per le ricerche generiche
-!pip install wikipedia-api -q
 
 import ipywidgets as widgets
 from IPython.display import display, clear_output
