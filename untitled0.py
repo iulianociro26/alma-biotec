@@ -1673,6 +1673,5 @@ with tab3:
 #                 st.error(f"Impossibile reperire informazioni su '{cerca_p}'.")
 
 
-!pip install streamlit wikipedia-api -q
 # Avviamo l'app usando un ponte alternativo immediato su localhost.run
 !streamlit run app.py & ssh -o StrictHostKeyChecking=no -R 80:localhost:8501 nokey@localhost.run
