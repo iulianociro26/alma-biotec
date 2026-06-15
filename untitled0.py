@@ -112,16 +112,18 @@ if st.button("Invia ed Elabora"):
 
         risposta_base = ""
         dati_ricerca = ""
+risposta_base = ""
+        dati_ricerca = ""
 
         # --- CONTROLLO COMANDI SPECIALI CON L'USO DEL SUPER CERVELLO ---
-        # --- CONTROLLO COMANDI SPECIALI CON L'USO DEL SUPER CERVELLO ---
-         if messaggio.startswith("registra brevetto:"):
-             dati = input_domanda[18:].strip()
-             risposta_base = registra_nuovo_brevetto(dati)
+        if messaggio.startswith("registra brevetto:"):
+            dati = input_domanda[18:].strip()
+            risposta_base = registra_nuovo_brevetto(dati)
             
-         elif messaggio.startswith("cerca brevetto "):
-             chiave = input_domanda[15:].strip()
-             risultat_archivio = cerca_brevetto_archiviato(chiave)
+        elif messaggio.startswith("cerca brevetto "):
+            chiave = input_domanda[15:].strip()
+            risultat_archivio = cerca_brevetto_archiviato(chiave)
+            if risultat_archivio:
                 risposta_base = risultat_archivio
             else:
                 dati_ricerca = f"Nota: Il brevetto '{chiave}' non è presente nell'archivio privato."
@@ -130,14 +132,10 @@ if st.button("Invia ed Elabora"):
         elif messaggio.startswith("cerca "):
             argomento = input_domanda[6:].strip()
             dati_ricerca = cerca_su_internet(argomento)
-            # ALMA rielabora i dati di Wikipedia con la sua testa!
             risposta_base = chiedi_al_cervello_di_alma(chi_parla, f"Spiegami questo argomento: {argomento}", f"Dati enciclopedici trovati: {dati_ricerca}")
             
         else:
-            # Chiacchierata libera: ALMA usa Groq al 100% per rispondere a qualsiasi cosa!
             risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, "Sistemi operativi e geotermia attivi.")
-
-        # Mostriamo la risposta finale stile Chloe
         st.chat_message("assistant").write(f"**[{NOME_IA}]**: {risposta_base}")
         
         # Salvataggio automatico nella memoria
