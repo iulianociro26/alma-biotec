@@ -114,14 +114,14 @@ if st.button("Invia ed Elabora"):
         dati_ricerca = ""
 
         # --- CONTROLLO COMANDI SPECIALI CON L'USO DEL SUPER CERVELLO ---
-        if messaggio.startswith("registra brevetto:"):
-            dati = input_domanda[18:].strip()
-            risposta_base = registra_nuovo_brevetto(dati)
+        # --- CONTROLLO COMANDI SPECIALI CON L'USO DEL SUPER CERVELLO ---
+         if messaggio.startswith("registra brevetto:"):
+             dati = input_domanda[18:].strip()
+             risposta_base = registra_nuovo_brevetto(dati)
             
-       elif messaggio.startswith("cerca brevetto "):
-            chiave = input_domanda[15:].strip()
-            risultat_archivio = cerca_brevetto_archiviato(chiave)
-            if risultat_archivio:
+         elif messaggio.startswith("cerca brevetto "):
+             chiave = input_domanda[15:].strip()
+             risultat_archivio = cerca_brevetto_archiviato(chiave)
                 risposta_base = risultat_archivio
             else:
                 dati_ricerca = f"Nota: Il brevetto '{chiave}' non è presente nell'archivio privato."
