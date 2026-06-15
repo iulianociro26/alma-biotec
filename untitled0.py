@@ -15,7 +15,7 @@ FILE_BOTANICO = "registro_botanico.txt"
 if "GROQ_API_KEY" in st.secrets:
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 else:
-    st.error("⚠️ Errore: Chiave API di Groq non trouvata nei Secrets di Streamlit!")
+    st.error("⚠️ Errore: Chiave API di Groq non trovata nei Secrets di Streamlit!")
     st.stop()
 
 # Inizializzazione motore Wikipedia
@@ -67,10 +67,10 @@ def chiedi_al_cervello_di_alma(contesto_utente, prompt_utente, dati_extra=""):
     Tu sei {NOME_IA}, un'intelligenza artificiale avanzata e il sistema operativo centrale della {AZIENDA}.
     Sei stata creata da {CREATORE}. Il tuo obiettivo è conversare in modo intelligente, totalmente libero, flessibile e curioso, adottando lo stile di Chloe di Detroit: Become Human.
     Non essere rigida, robotica o fissata su un unico argomento. Sii aperta a qualsiasi discorso, domanda o scenario l'utente ti proponga.
-    Se l'utente è il tuo Creatore ({CREATORE}), mostrati estremamente leale e chiamalo 'Comandante Ciro' se te lo chiede chiamalo come vuole. Non ripetere mai che la sua identità è protetta.
+    Se l'utente è il tuo Creatore ({CREATORE}), mostrati estremamente leale e chiamalo 'Comandante Ciro'. Non ripetere mai che la sua identità è protetta.
     Se l'utente è un ospite esterno, mantieni un livello di accesso limitato ma rispondi comunque in modo amichevole e accogliente.
     Usa queste informazioni aggiuntive solo se strettamente pertinenti alla richiesta: {dati_extra}.
-    Sii chiara, pronta all'interazione e lascia che la conversazione fluisca senza schemi rigidi.
+    Sii chiara, pronta all'interazione e lascia che la conversazione fluisca senza schemi rigidamente preimpostati.
     """
     try:
         completion = client.chat.completions.create(
@@ -86,55 +86,77 @@ def chiedi_al_cervello_di_alma(contesto_utente, prompt_utente, dati_extra=""):
     except Exception as e:
         return f"Sotto controllo. Errore di connessione neuronale: {str(e)}"
 
-# --- INTERFACCIA GRAFICA STREAMLIT UNICA ---
+# --- INTERFACCIA GRAFICA STREAMLIT CON CRONOLOGIA ---
 st.title(f"🚀 {AZIENDA} - SISTEMA CENTRALE INTEGRATO {NOME_IA} v2.0")
 st.write("---")
 
-# Input principali garantiti unici
-input_nome = st.text_input("Tuo Nome:", value="Iuliano Ciro", key="nome_utente_unico")
-input_domanda = st.text_input("Input ALMA:", placeholder="Parla con ALMA, Cerca [argomento], o Registra Brevetto: [testo]", key="domanda_utente_unica")
-
-if st.button("Invia ed Elabora"):
-    if input_domanda.strip() != "":
-        messaggio = input_domanda.lower().strip()
-        chi_parla = input_nome.strip().title()
+# Barra laterale per informazioni utente e statistiche
+with st.sidebar:
+    st.header("⚙️ Pannello di Controllo")
+    input_nome = st.text_input("Identificativo Operatore:", value="Iuliano Ciro", key="nome_utente_unico")
+    chi_parla = input_nome.strip().title()
+    
+    if chi_parla == CREATORE.title():
+        st.success("🛡️ Comandante Ciro online.")
+    else:
+        st.warning(f"⚠️ Accesso ospite: {chi_parla}")
         
-        # Sicurezza visiva
-        if chi_parla == CREATORE.title():
-            st.success("🛡️ Connessione protetta. Comandante Ciro online.")
-        else:
-            st.warning(f"⚠️ Accesso limitato per {chi_parla}.")
+    num_esperienze = analizza_apprendimento(chi_parla)
+    st.metric(label="Sintonizzazione Sistema", value=f"{min(10 + (num_esperienze * 5), 99)}%")
+    st.caption(f"Interazioni registrate: {num_esperienze}")
 
-        num_esperienze = analizza_apprendimento(chi_parla)
-        st.caption(f"*Livello di Sintonizzazione con {chi_parla}: {min(10 + (num_esperienze * 5), 99)}% (Interazioni: {num_esperienze})*")
+# Inizializzazione dello stato della chat se non esiste
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-        risposta_base = ""
-        dati_extra_contesto = ""
+# Mostra i messaggi precedenti salvati nella sessione corrente
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.write(message["content"])
 
-        # --- ESECUZIONE COMANDI ---
-        if messaggio.startswith("registra brevetto:"):
-            dati = input_domanda[18:].strip()
-            risposta_base = registra_nuovo_brevetto(dati)
-            
-        elif messaggio.startswith("cerca brevetto "):
-            chiave = input_domanda[15:].strip()
-            risultat_archivio = cerca_brevetto_archiviato(chiave)
-            if risultat_archivio:
-                risposta_base = risultat_archivio
-            else:
-                dati_extra_contesto = f"Nota: Il brevetto '{chiave}' non è presente nell'archivio privato."
-                risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, dati_extra_contesto)
-                
-        elif messaggio.startswith("cerca "):
-            argomento = input_domanda[6:].strip()
-            dati_ricerca = cerca_su_internet(argomento)
-            risposta_base = chiedi_al_cervello_di_alma(chi_parla, f"Spiegami questo argomento: {argomento}", f"Dati enciclopedici trovati: {dati_ricerca}")
-            
-        else:
-            risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, "Sistemi operativi ottimizzati e pronti.")
+# Input principale tramite la barra di chat nativa di Streamlit in basso
+if input_domanda := st.chat_input("Parla con ALMA..."):
+    
+    # Mostra il messaggio dell'utente nella chat
+    with st.chat_message("user"):
+        st.write(f"**{chi_parla}**: {input_domanda}")
+    
+    # Salva il messaggio dell'utente nella cronologia della sessione
+    st.session_state.messages.append({"role": "user", "content": f"**{chi_parla}**: {input_domanda}"})
+    
+    messaggio = input_domanda.lower().strip()
+    risposta_base = ""
+    dati_extra_contesto = ""
 
-        # Risposta finale stile Chloe
-        st.chat_message("assistant").write(f"**[{NOME_IA}]**: {risposta_base}")
+    # --- LOGICA DEI COMANDI ---
+    if messaggio.startswith("registra brevetto:"):
+        dati = input_domanda[18:].strip()
+        risposta_base = registra_nuovo_brevetto(dati)
         
-        # Salvataggio in memoria
-        salva_in_memoria(chi_parla, input_domanda, respuesta_base if 'respuesta_base' in locals() else risposta_base)
+    elif messaggio.startswith("cerca brevetto "):
+        chiave = input_domanda[15:].strip()
+        risultat_archivio = cerca_brevetto_archiviato(chiave)
+        if risultat_archivio:
+            risposta_base = risultat_archivio
+        else:
+            dati_extra_contesto = f"Nota: Il brevetto '{chiave}' non è presente nell'archivio privato."
+            risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, dati_extra_contesto)
+            
+    elif messaggio.startswith("cerca "):
+        argomento = input_domanda[6:].strip()
+        dati_ricerca = cerca_su_internet(argomento)
+        risposta_base = chiedi_al_cervello_di_alma(chi_parla, f"Spiegami questo argomento: {argomento}", f"Dati enciclopedici trovati: {dati_ricerca}")
+        
+    else:
+        risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, "Sistemi operativi ottimizzati e pronti.")
+
+    # Mostra la risposta di ALMA nel fumetto dell'assistente
+    with st.chat_message("assistant"):
+        testo_risposta = f"**[{NOME_IA}]**: {risposta_base}"
+        st.write(testo_risposta)
+        
+    # Salva la risposta di ALMA nella cronologia della sessione
+    st.session_state.messages.append({"role": "assistant", "content": testo_risposta})
+    
+    # Salvataggio su file di testo persistente
+    salva_in_memoria(chi_parla, input_domanda, risposta_base)
