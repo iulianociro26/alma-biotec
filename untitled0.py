@@ -118,7 +118,7 @@ if st.button("Invia ed Elabora"):
             dati = input_domanda[18:].strip()
             risposta_base = registra_nuovo_brevetto(dati)
             
-        elif mensaje = messaggio.startswith("cerca brevetto "):
+       elif messaggio.startswith("cerca brevetto "):
             chiave = input_domanda[15:].strip()
             risultat_archivio = cerca_brevetto_archiviato(chiave)
             if risultat_archivio:
