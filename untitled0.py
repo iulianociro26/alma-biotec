@@ -163,3 +163,23 @@ if input_domanda := st.chat_input("Parla con ALMA..."):
     
     # Salvataggio su file di testo persistente
     salva_in_memoria(chi_parla, input_domanda, risposta_base)
+
+# --- CONFIGURAZIONE PAGINA E RIMOZIONE LINK GITHUB ---
+st.set_page_config(
+    page_title="Biotec Technologies - ALMA",
+    page_icon="🚀",
+    layout="centered",
+    initial_sidebar_state="expanded"
+)
+
+# Nasconde il menu di Streamlit e l'icona di GitHub in alto a destra
+nascondi_elementi_stile = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .viewerBadge_link__1S137 {display: none !important;}
+    input[type=file] {color: transparent;}
+    </style>
+"""
+st.markdown(nascondi_elementi_stile, unsafe_allow_html=True)
