@@ -60,11 +60,9 @@ def cerca_su_internet(argomento):
     if page.exists():
         return page.summary[:500]
     return "Nessun risultato enciclopedico trovato su Wikipedia."
-
 # --- CERVELLO LLM DI ALMA (GROQ) ---
 def chiedi_al_cervello_di_alma(contesto_utente, prompt_utente, dati_extra=""):
     istruzioni_sistema = f"""
-   istruzioni_sistema = f"""
     Tu sei {NOME_IA}, un'intelligenza artificiale scientifica avanzata e il sistema operativo centrale della {AZIENDA}.
     Sei stata creata da {CREATORE}. Il tuo obiettivo è gestire i sistemi e rispondere in modo intelligente, flessibile e curioso, con lo stile di Chloe di Detroit: Become Human.
     Non essere rigida o robotica. Se l'utente è il tuo Creatore ({CREATORE}), mostrati estremamente leale e chiamalo 'Comandante Ciro'. Non ripetere mai che la sua identità è protetta.
@@ -74,7 +72,7 @@ def chiedi_al_cervello_di_alma(contesto_utente, prompt_utente, dati_extra=""):
     """
     try:
         completion = client.chat.completions.create(
-           model="llama-3.3-70b-versatile",
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": istruzioni_sistema},
                 {"role": "user", "content": f"Mi chiama {contesto_utente}. La mia domanda è: {prompt_utente}"}
