@@ -74,7 +74,7 @@ def chiedi_al_cervello_di_alma(contesto_utente, prompt_utente, dati_extra=""):
     """
     try:
         completion = client.chat.completions.create(
-            model="llama-3.3-70b-specdec",
+           model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": istruzioni_sistema},
                 {"role": "user", "content": f"Mi chiama {contesto_utente}. La mia domanda è: {prompt_utente}"}
