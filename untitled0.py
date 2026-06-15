@@ -80,7 +80,7 @@ def chiedi_al_cervello_di_alma(contesto_utente, prompt_utente, dati_extra=""):
                 {"role": "user", "content": f"Mi chiama {contesto_utente}. La mia domanda è: {prompt_utente}"}
             ],
             temperature=0.7,
-            max_tokens=250
+            max_tokens=1000
         )
         return completion.choices[0].message.content
     except Exception as e:
