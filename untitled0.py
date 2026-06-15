@@ -102,6 +102,20 @@ if st.button("Invia ed Elabora"):
         chi_parla = input_nome.strip().title()
         
         # Gestione Sicurezza Identità Visiva
+# --- INTERFACCIA STREAMLIT ---
+st.title(f"🚀 {AZIENDA} - SISTEMA CENTRALE INTEGRATO {NOME_IA} v2.0")
+st.write("---")
+
+# Input utente sulla barra principale
+input_nome = st.text_input("Tuo Nome:", value="Iuliano Ciro")
+input_domanda = st.text_input("Input ALMA:", placeholder="Parla con ALMA, Cerca [argomento], o Registra Brevetto: [testo]")
+
+if st.button("Invia ed Elabora"):
+    if input_domanda.strip() != "":
+        messaggio = input_domanda.lower().strip()
+        chi_parla = input_nome.strip().title()
+        
+        # Gestione Sicurezza Identità Visiva
         if chi_parla == CREATORE.title():
             st.success(f"🛡️ Connessione protetta. Comandante Ciro online.")
         else:
@@ -111,9 +125,7 @@ if st.button("Invia ed Elabora"):
         st.caption(f"*Livello di Sintonizzazione con {chi_parla}: {min(10 + (num_esperienze * 5), 99)}% (Interazioni: {num_esperienze})*")
 
         risposta_base = ""
-        dati_ricerca = ""
-risposta_base = ""
-        dati_ricerca = ""
+        dati_extra_contesto = ""
 
         # --- CONTROLLO COMANDI SPECIALI CON L'USO DEL SUPER CERVELLO ---
         if messaggio.startswith("registra brevetto:"):
@@ -126,8 +138,8 @@ risposta_base = ""
             if risultat_archivio:
                 risposta_base = risultat_archivio
             else:
-                dati_ricerca = f"Nota: Il brevetto '{chiave}' non è presente nell'archivio privato."
-                risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, dati_ricerca)
+                dati_extra_contesto = f"Nota: Il brevetto '{chiave}' non è presente nell'archivio privato."
+                risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, dati_extra_contesto)
                 
         elif messaggio.startswith("cerca "):
             argomento = input_domanda[6:].strip()
@@ -136,6 +148,8 @@ risposta_base = ""
             
         else:
             risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, "Sistemi operativi e geotermia attivi.")
+
+        # Mostriamo la risposta finale stile Chloe
         st.chat_message("assistant").write(f"**[{NOME_IA}]**: {risposta_base}")
         
         # Salvataggio automatico nella memoria
