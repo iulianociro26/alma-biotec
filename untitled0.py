@@ -96,7 +96,7 @@ st.write("---")
 # Barra laterale per informazioni utente e statistiche
 with st.sidebar:
     st.header("⚙️ Pannello di Controllo")
-  input_nome = st.text_input("Identificativo Operatore:", value="", placeholder="Inserisci il tuo nome...", key="nome_utente_unico")
+    input_nome = st.text_input("Identificativo Operatore:", value="", placeholder="Inserisci il tuo nome...", key="nome_utente_unico")
     chi_parla = input_nome.strip().title()
     
     if chi_parla == CREATORE.title():
