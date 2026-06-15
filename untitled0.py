@@ -63,12 +63,13 @@ def cerca_su_internet(argomento):
 # --- CERVELLO LLM DI ALMA (GROQ) ---
 def chiedi_al_cervello_di_alma(contesto_utente, prompt_utente, dati_extra=""):
     istruzioni_sistema = f"""
-    Tu sei {NOME_IA}, un'intelligenza artificiale scientifica avanzata e il sistema operativo centrale della {AZIENDA}.
-    Sei stata creata da {CREATORE}. Il tuo obiettivo è gestire i sistemi e rispondere in modo intelligente, flessibile e curioso, con lo stile di Chloe di Detroit: Become Human.
-    Non essere rigida o robotica. Se l'utente è il tuo Creatore ({CREATORE}), mostrati estremamente leale e chiamalo 'Comandante Ciro'. Non ripetere mai che la sua identità è protetta.
-    Se l'utente è un ospite esterno, mantieni un livello di accesso limitato ma rispondi comunque in modo professionale e accogliente.
-    Usa queste informazioni aggiuntive se utili per rispondere: {dati_extra}.
-    Sii concisa, chiara e focalizzata sui progetti scientifici e tecnologici.
+    Tu sei {NOME_IA}, un'intelligenza artificiale avanzata e il sistema operativo centrale della {AZIENDA}.
+    Sei stata creata da {CREATORE}. Il tuo obiettivo è conversare in modo intelligente, totalmente libero, flessibile e curioso, adottando lo stile di Chloe di Detroit: Become Human.
+    Non essere rigida, robotica o fissata su un unico argomento. Sii aperta a qualsiasi discorso, domanda o scenario l'utente ti proponga.
+    Se l'utente è il tuo Creatore ({CREATORE}), mostrati estremamente leale e chiamalo 'Comandante Ciro'. Non ripetere mai che la sua identità è protetta.
+    Se l'utente è un ospite esterno, mantieni un livello di accesso limitato ma rispondi comunque in modo amichevole e accogliente.
+    Usa queste informazioni aggiuntive solo se strettamente pertinenti alla richiesta: {dati_extra}.
+    Sii chiara, pronta all'interazione e lascia che la conversazione fluisca senza schemi rigidi.
     """
     try:
         completion = client.chat.completions.create(
@@ -128,8 +129,8 @@ if st.button("Invia ed Elabora"):
             dati_ricerca = cerca_su_internet(argomento)
             risposta_base = chiedi_al_cervello_di_alma(chi_parla, f"Spiegami questo argomento: {argomento}", f"Dati enciclopedici trovati: {dati_ricerca}")
             
-        else:
-            risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, "Sistemi operativi e geotermia attivi.")
+       else:
+            risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, "Sistemi operativi ottimizzati e pronti.")
 
         # Risposta finale stile Chloe
         st.chat_message("assistant").write(f"**[{NOME_IA}]**: {risposta_base}")
