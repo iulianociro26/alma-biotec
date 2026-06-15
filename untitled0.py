@@ -15,7 +15,7 @@ FILE_BOTANICO = "registro_botanico.txt"
 if "GROQ_API_KEY" in st.secrets:
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 else:
-    st.error("⚠️ Errore: Chiave API di Groq non trovata nei Secrets di Streamlit!")
+    st.error("⚠️ Errore: Chiave API di Groq non trouvata nei Secrets di Streamlit!")
     st.stop()
 
 # Inizializzazione motore Wikipedia
@@ -60,6 +60,7 @@ def cerca_su_internet(argomento):
     if page.exists():
         return page.summary[:500]
     return "Nessun risultato enciclopedico trovato su Wikipedia."
+
 # --- CERVELLO LLM DI ALMA (GROQ) ---
 def chiedi_al_cervello_di_alma(contesto_utente, prompt_utente, dati_extra=""):
     istruzioni_sistema = f"""
@@ -112,8 +113,6 @@ if st.button("Invia ed Elabora"):
 
         # --- ESECUZIONE COMANDI ---
         if messaggio.startswith("registra brevetto:"):
-        # --- ESECUZIONE COMANDI ---
-        if messaggio.startswith("registra brevetto:"):
             dati = input_domanda[18:].strip()
             risposta_base = registra_nuovo_brevetto(dati)
             
@@ -138,4 +137,4 @@ if st.button("Invia ed Elabora"):
         st.chat_message("assistant").write(f"**[{NOME_IA}]**: {risposta_base}")
         
         # Salvataggio in memoria
-        salva_in_memoria(chi_parla, input_domanda, risposta_base)
+        salva_in_memoria(chi_parla, input_domanda, respuesta_base if 'respuesta_base' in locals() else risposta_base)
