@@ -181,8 +181,13 @@ if input_domanda := st.chat_input("Parla con ALMA..."):
         dati_ricerca = cerca_su_internet(argomento)
         risposta_base = chiedi_al_cervello_di_alma(chi_parla, f"Spiegami questo argomento: {argomento}", f"Dati enciclopedici trovati: {dati_ricerca}", memoria_passata)
         
-    else:
-        risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, "Sistemi operativi ottimizzati e pronti.", memoria_passata)
+   else:
+        if contenuto_file:
+            # Se c'è un file caricato, lo inseriamo nel contesto aggiuntivo
+            contesto_documento = f"CONTESTO DOCUMENTO CARICATO DALL'UTENTE:\n{contenuto_file}"
+            risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, contesto_documento, memoria_passata)
+        else:
+            risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, "Sistemi operativi ottimizzati e pronti.", memoria_passata)
 
     # Mostra la risposta di ALMA nel fumetto dell'assistente
     with st.chat_message("assistant"):
