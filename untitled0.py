@@ -29,6 +29,21 @@ def salva_in_memoria(nome, domanda, risposta):
     with open(FILE_MEMORIA, "a", encoding="utf-8") as f:
         f.write(f"Utente: {nome} | Domanda: {domanda} | Risposta: {risposta}\n")
 
+def leggi_memoria_storica(nome_utente, limite_linee=6):
+    if not os.path.exists(FILE_MEMORIA):
+        return ""
+    with open(FILE_MEMORIA, "r", encoding="utf-8") as f:
+        linee = f.readlines()
+    
+    # Filtra solo i ricordi legati a questo specifico utente
+    ricordi_utente = [l.strip() for l in linee if f"Utente: {nome_utente.strip().title()}" in l]
+    
+    # Prende solo gli ultimi messaggi per mantenere il contesto fresco
+    ultimi_ricordi = ricordi_utente[-limite_linee:]
+    
+    if ultimi_ricordi:
+        return "\n".join(ultimi_ricordi)
+    return ""
 def analizza_apprendimento(nome_utente):
     if not os.path.exists(FILE_MEMORIA):
         return 0
