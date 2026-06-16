@@ -135,69 +135,22 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
 
-# Input principale tramite la barra di chat nativa di Streamlit in basso
-if input_domanda := st.chat_input("Parla con ALMA..."):
-    
-    # Mostra il messaggio dell'utente nella chat
-    with st.chat_message("user"):
-        st.write(f"**{chi_parla}**: {input_domanda}")
-    
-    # Salva il messaggio dell'utente nella cronologia della sessione
-    st.session_state.messages.append({"role": "user", "content": f"**{chi_parla}**: {input_domanda}"})
-    
-    messaggio = input_domanda.lower().strip()
-    risposta_base = ""
-    dati_extra_contesto = ""
+def salva_in_memoria(nome, domanda, risposta):
+    with open(FILE_MEMORIA, "a", encoding="utf-8") as f:
+        f.write(f"Utente: {nome} | Domanda: {domanda} | Risposta: {risposta}\n")
 
-    # --- LOGICA DEI COMANDI ---
-    if messaggio.startswith("registra brevetto:"):
-        dati = input_domanda[18:].strip()
-        risposta_base = registra_nuovo_brevetto(dati)
-        
-    elif messaggio.startswith("cerca brevetto "):
-        chiave = input_domanda[15:].strip()
-        risultat_archivio = cerca_brevetto_archiviato(chiave)
-        if risultat_archivio:
-            risposta_base = risultat_archivio
-        else:
-            dati_extra_contesto = f"Nota: Il brevetto '{chiave}' non è presente nell'archivio privato."
-            risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, dati_extra_contesto)
-            
-    elif messaggio.startswith("cerca "):
-        argomento = input_domanda[6:].strip()
-        dati_ricerca = cerca_su_internet(argomento)
-        risposta_base = chiedi_al_cervello_di_alma(chi_parla, f"Spiegami questo argomento: {argomento}", f"Dati enciclopedici trovati: {dati_ricerca}")
-        
-    else:
-        risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, "Sistemi operativi ottimizzati e pronti.")
-
-    # Mostra la risposta di ALMA nel fumetto dell'assistente
-    with st.chat_message("assistant"):
-        testo_risposta = f"**[{NOME_IA}]**: {risposta_base}"
-        st.write(testo_risposta)
-        
-    # Salva la risposta di ALMA nella cronologia della sessione
-    st.session_state.messages.append({"role": "assistant", "content": testo_risposta})
+def leggi_memoria_storica(nome_utente, limite_linee=6):
+    if not os.path.exists(FILE_MEMORIA):
+        return ""
+    with open(FILE_MEMORIA, "r", encoding="utf-8") as f:
+        linee = f.readlines()
     
-    # Salvataggio su file di testo persistente
-    salva_in_memoria(chi_parla, input_domanda, risposta_base)
-
-# --- CONFIGURAZIONE PAGINA E RIMOZIONE LINK GITHUB ---
-st.set_page_config(
-    page_title="Biotec Technologies - ALMA",
-    page_icon="🚀",
-    layout="centered",
-    initial_sidebar_state="expanded"
-)
-
-# Nasconde il menu di Streamlit e l'icona di GitHub in alto a destra
-nascondi_elementi_stile = """
-    <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    .viewerBadge_link__1S137 {display: none !important;}
-    input[type=file] {color: transparent;}
-    </style>
-"""
-st.markdown(nascondi_elementi_stile, unsafe_allow_html=True)
+    # Filtra solo i ricordi legati a questo specifico utente
+    ricordi_utente = [l.strip() for l in linee if f"Utente: {nome_utente.strip().title()}" in l]
+    
+    # Prende solo gli ultimi messaggi per mantenere il contesto fresco
+    ultimi_ricordi = ricordi_utente[-limite_linee:]
+    
+    if ultimi_ricordi:
+        return "\n".join(ultimi_ricordi)
+    return ""
