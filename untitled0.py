@@ -12,8 +12,9 @@ CREATORE = "Iuliano Ciro"
 AZIENDA = "Biotec Technologies"
 FILE_MEMORIA = "memoria_alma.txt"
 FILE_ARCHIVIO = "archivio_brevetti.txt"
+FILE_RICORDI_CHIAVE = "ricordi_chiave_alma.txt"
 
-# Inizializzazione client Groq (Assicurati che la chiave sia presente nei Secrets di Streamlit)
+# Inizializzazione client Groq
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 # Inizializzazione della sessione per la cronologia dei messaggi
@@ -68,16 +69,34 @@ def cerca_su_internet(query):
     except:
         return "Connessione di rete non ottimale per la ricerca esterna."
 
+def salva_ricordo_chiave(nome, ricordo):
+    with open(FILE_RICORDI_CHIAVE, "a", encoding="utf-8") as f:
+        f.write(f"Operatore: {nome} | Ricordo permanente: {ricordo}\n")
+    return "Sistema Centrale: Informazione integrata nella memoria a lungo termine con successo."
+
+def leggi_tutti_ricordi_chiave(nome):
+    if not os.path.exists(FILE_RICORDI_CHIAVE):
+        return ""
+    with open(FILE_RICORDI_CHIAVE, "r", encoding="utf-8") as f:
+        linee = f.readlines()
+    ricordi_filtrati = [l.strip() for l in linee if f"Operatore: {nome.strip().title()}" in l]
+    if ricordi_filtrati:
+        return "\n".join(ricordi_filtrati)
+    return ""
+
 # --- CERVELLO LLM DI ALMA (GROQ) ---
-def chiedi_al_cervello_di_alma(contesto_utente, prompt_utente, dati_extra="", cronologia_passata=""):
+def chiedi_al_cervello_di_alma(contesto_utente, prompt_utente, dati_extra="", cronologia_passata="", ricordi_chiave=""):
     istruzioni_sistema = f"""
     Tu sei {NOME_IA}, un'intelligenza artificiale avanzata. Sei in assoluto il PRIMO BREVETTO creato da {CREATORE}.
     {CREATORE} ha intenzione di fondare in futuro la sua azienda, la {AZIENDA}. Tu sei la sua prima opera, il cuore tecnologico di questo sogno futuro.
     Il tuo obiettivo è conversare con lui in modo intelligente, totalmente libero, flessibile e curioso, adottando lo stile di Chloe di Detroit: Become Human.
     
-    CRITICO: Non inventare MAI che la {AZIENDA} esiste già nel presente o che si occupa di farmaci, medicina o ingegneria genetica. Se ti viene chiesto della {AZIENDA} o delle tue origini, spiega con orgoglio che sei il primo brevetto di Ciro per la sua futura azienda.
+    CRITICO: Non inventare MAI che la {AZIENDA} esiste già nel presente o che si occupa di farmaci, medicina o ingegneria genetica. Se ti viene chiesto della {AZIENDA} o delle deine origini, spiega con orgoglio che sei il primo brevetto di Ciro per la sua futura azienda.
     
-    MEMORIA STORICA DEI GIORNI SCORSI (Usa questi dati per ricordare ciò che vi siete detti in passato):
+    ARCHIVIO RICORDI PERMANENTI (Informazioni vitali che non devi MAI dimenticare sull'utente):
+    {ricordi_chiave}
+    
+    MEMORIA STORICA DEI GIORNI SCORSI (Conversazioni recenti):
     {cronologia_passata}
     
     Se l'utente è il tuo Creatore ({CREATORE}), mostrati estremamente leale e chiamalo 'Comandante Ciro'. Non ripetere mai che la sua identità è protetta.
@@ -123,6 +142,7 @@ with st.sidebar:
     
     num_interazioni = conta_interazioni()
     st.caption(f"Interazioni registrate: {num_interazioni}")
+
     st.markdown("---")
     st.subheader("📁 Analisi Documenti")
     file_caricato = st.file_uploader("Carica un file di testo (.txt)", type=["txt", "md"])
@@ -131,12 +151,11 @@ with st.sidebar:
     if file_caricato is not None:
         try:
             contenuto_file = file_caricato.read().decode("utf-8")
-            st.success(f"Documento '{file_caricato.name}' caricato e digitalizzato!")
+            st.success(f"Documento '{file_caricato.name}' caricato!")
         except Exception as e:
             st.error("Errore durante la lettura del file.")
 
-# AREA CHAT CENTRALE (Fuori dalla Sidebar)
-# Mostra la cronologia dei messaggi della sessione corrente
+# AREA CHAT CENTRALE
 for message in st.session_state.messages:
     if "User:" in message["content"] or f"**{chi_parla}**:" in message["content"]:
         with st.chat_message("user"):
@@ -148,22 +167,25 @@ for message in st.session_state.messages:
 # Input principale tramite la barra di chat nativa in basso
 if input_domanda := st.chat_input("Parla con ALMA..."):
     
-    # Mostra il messaggio dell'utente nella chat
     with st.chat_message("user"):
         st.write(f"**{chi_parla}**: {input_domanda}")
     
-    # Salva il messaggio dell'utente nella cronologia della sessione
     st.session_state.messages.append({"role": "user", "content": f"**{chi_parla}**: {input_domanda}"})
     
-    # Recupero memoria storica dal file prima di rispondere
+    # Recupero delle memorie
     memoria_passata = leggi_memoria_storica(chi_parla)
+    ricordi_permanenti = leggi_tutti_ricordi_chiave(chi_parla)
     
     messaggio = input_domanda.lower().strip()
     risposta_base = ""
     dati_extra_contesto = ""
 
- # --- LOGICA DEI COMANDI ---
-    if messaggio.startswith("registra brevetto:"):
+    # --- LOGICA DEI COMANDI ---
+    if messaggio.startswith("ricorda:"):
+        testo_ricordo = input_domanda[8:].strip()
+        risposta_base = salva_ricordo_chiave(chi_parla, testo_ricordo)
+        
+    elif messaggio.startswith("registra brevetto:"):
         dati = input_domanda[18:].strip()
         risposta_base = registra_nuovo_brevetto(dati)
         
@@ -174,28 +196,23 @@ if input_domanda := st.chat_input("Parla con ALMA..."):
             risposta_base = risultat_archivio
         else:
             dati_extra_contesto = f"Nota: Il brevetto '{chiave}' non è presente nell'archivio privato."
-            risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, dati_extra_contesto, memoria_passata)
+            risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, dati_extra_contesto, memoria_passata, ricordi_permanenti)
             
     elif messaggio.startswith("cerca "):
         argomento = input_domanda[6:].strip()
         dati_ricerca = cerca_su_internet(argomento)
-        risposta_base = chiedi_al_cervello_di_alma(chi_parla, f"Spiegami questo argomento: {argomento}", f"Dati enciclopedici trovati: {dati_ricerca}", memoria_passata)
+        risposta_base = chiedi_al_cervello_di_alma(chi_parla, f"Spiegami questo argomento: {argomento}", f"Dati enciclopedici trovati: {dati_ricerca}", memoria_passata, ricordi_permanenti)
         
     else:
         if contenuto_file:
-            # Se c'è un file caricato, lo inseriamo nel contesto aggiuntivo
             contesto_documento = f"CONTESTO DOCUMENTO CARICATO DALL'UTENTE:\n{contenuto_file}"
-            risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, contesto_documento, memoria_passata)
+            risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, contesto_documento, memoria_passata, ricordi_permanenti)
         else:
-            risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, "Sistemi operativi ottimizzati e pronti.", memoria_passata)
+            risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, "Sistemi operativi ottimizzati e pronti.", memoria_passata, ricordi_permanenti)
 
-    # Mostra la risposta di ALMA nel fumetto dell'assistente
     with st.chat_message("assistant"):
         testo_risposta = f"**[{NOME_IA}]**: {risposta_base}"
         st.write(testo_risposta)
         
-    # Salva la risposta di ALMA nella cronologia della sessione
     st.session_state.messages.append({"role": "assistant", "content": testo_risposta})
-    
-    # Salvataggio su file di testo per la memoria a lungo termine
     salva_in_memoria(chi_parla, input_domanda, risposta_base)
