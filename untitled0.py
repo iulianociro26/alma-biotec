@@ -162,7 +162,7 @@ if input_domanda := st.chat_input("Parla con ALMA..."):
     risposta_base = ""
     dati_extra_contesto = ""
 
-    # --- LOGICA DEI COMANDI ---
+ # --- LOGICA DEI COMANDI ---
     if messaggio.startswith("registra brevetto:"):
         dati = input_domanda[18:].strip()
         risposta_base = registra_nuovo_brevetto(dati)
@@ -181,7 +181,7 @@ if input_domanda := st.chat_input("Parla con ALMA..."):
         dati_ricerca = cerca_su_internet(argomento)
         risposta_base = chiedi_al_cervello_di_alma(chi_parla, f"Spiegami questo argomento: {argomento}", f"Dati enciclopedici trovati: {dati_ricerca}", memoria_passata)
         
-   else:
+    else:
         if contenuto_file:
             # Se c'è un file caricato, lo inseriamo nel contesto aggiuntivo
             contesto_documento = f"CONTESTO DOCUMENTO CARICATO DALL'UTENTE:\n{contenuto_file}"
