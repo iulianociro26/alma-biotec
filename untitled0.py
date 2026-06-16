@@ -123,6 +123,17 @@ with st.sidebar:
     
     num_interazioni = conta_interazioni()
     st.caption(f"Interazioni registrate: {num_interazioni}")
+    st.markdown("---")
+    st.subheader("📁 Analisi Documenti")
+    file_caricato = st.file_uploader("Carica un file di testo (.txt)", type=["txt", "md"])
+    
+    contenuto_file = ""
+    if file_caricato is not None:
+        try:
+            contenuto_file = file_caricato.read().decode("utf-8")
+            st.success(f"Documento '{file_caricato.name}' caricato e digitalizzato!")
+        except Exception as e:
+            st.error("Errore durante la lettura del file.")
 
 # AREA CHAT CENTRALE (Fuori dalla Sidebar)
 # Mostra la cronologia dei messaggi della sessione corrente
