@@ -1,30 +1,27 @@
 import streamlit as st
 import os
-import wikipediaapi
 from groq import Groq
+from wikipediaapi import Wikipedia
 
-# --- CONFIGURAZIONE CORE DI ALMA ---
-CREATORE = "Iuliano Ciro"
+# --- CONFIGURAZIONE INTERFACCIA ---
+st.set_page_config(page_title="ALMA v2.0", page_icon="🚀", layout="wide")
+
+# --- COSTANTI E CONFIGURAZIONI ---
 NOME_IA = "ALMA"
+CREATORE = "Iuliano Ciro"
 AZIENDA = "Biotec Technologies"
 FILE_MEMORIA = "memoria_alma.txt"
-FILE_BREVETTI = "brevetti_biotec.txt"
-FILE_BOTANICO = "registro_botanico.txt"
+FILE_ARCHIVIO = "archivio_brevetti.txt"
 
-# Inizializzazione sicura del client Groq via Secrets
-if "GROQ_API_KEY" in st.secrets:
-    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-else:
-    st.error("⚠️ Errore: Chiave API di Groq non trovata nei Secrets di Streamlit!")
-    st.stop()
+# Inizializzazione client Groq (Assicurati che la chiave sia presente nei Secrets di Streamlit)
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-# Inizializzazione motore Wikipedia
-wiki = wikipediaapi.Wikipedia(
-    user_agent=f"{AZIENDA}_Assistant/1.0 (contatto: info@{AZIENDA.lower().replace(' ', '')}.com)",
-    language='it'
-)
+# Inizializzazione della sessione per la cronologia dei messaggi
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-# --- FUNZIONI DI NAVIGAZIONE E DATABASE ---
+# --- FUNZIONI DI SERVIZIO / MEMORIA ---
+
 def salva_in_memoria(nome, domanda, risposta):
     with open(FILE_MEMORIA, "a", encoding="utf-8") as f:
         f.write(f"Utente: {nome} | Domanda: {domanda} | Risposta: {risposta}\n")
@@ -34,47 +31,42 @@ def leggi_memoria_storica(nome_utente, limite_linee=6):
         return ""
     with open(FILE_MEMORIA, "r", encoding="utf-8") as f:
         linee = f.readlines()
-    
-    # Filtra solo i ricordi legati a questo specifico utente
     ricordi_utente = [l.strip() for l in linee if f"Utente: {nome_utente.strip().title()}" in l]
-    
-    # Prende solo gli ultimi messaggi per mantenere il contesto fresco
     ultimi_ricordi = ricordi_utente[-limite_linee:]
-    
     if ultimi_ricordi:
         return "\n".join(ultimi_ricordi)
     return ""
-def analizza_apprendimento(nome_utente):
+
+def conta_interazioni():
     if not os.path.exists(FILE_MEMORIA):
         return 0
     with open(FILE_MEMORIA, "r", encoding="utf-8") as f:
+        return len(f.readlines())
+
+def registra_nuovo_brevetto(testo_brevetto):
+    with open(FILE_ARCHIVIO, "a", encoding="utf-8") as f:
+        f.write(f"{testo_brevetto}\n")
+    return f"Sistema Centrale: Nuovo brevetto archiviato con successo nei server della {AZIENDA}."
+
+def cerca_brevetto_archiviato(chiave):
+    if not os.path.exists(FILE_ARCHIVIO):
+        return None
+    with open(FILE_ARCHIVIO, "r", encoding="utf-8") as f:
         linee = f.readlines()
-    return len([l for l in linee if f"Utente: {nome_utente.strip().title()}" in l])
-
-def registra_nuovo_brevetto(dati_brevetto):
-    with open(FILE_BREVETTI, "a", encoding="utf-8") as f:
-        f.write(f"{dati_brevetto.strip()}\n")
-    return "Brevetto salvato con successo nel database aziendale. 📁✅"
-
-def cerca_brevetto_archiviato(chiave_ricerca):
-    if not os.path.exists(FILE_BREVETTI):
-        return "L'archivio privato brevetti è ancora vuoto."
-    with open(FILE_BREVETTI, "r", encoding="utf-8") as f:
-        brevetti = f.readlines()
-    chiave_pulita = chiave_ricerca.lower().strip()
-    risultati = [b.strip() for b in brevetti if chiave_pulita in b.lower()]
+    risultati = [l.strip() for l in linee if chiave.lower() in l.lower()]
     if risultati:
-        risposta = f"Trovate {len(risultati)} corrispondenze nel database Biotec:\n"
-        for r in risultati:
-            risposta += f"👉 {r}\n"
-        return risposta
+        return f"Database Privato: Trovati riscontri coerenti:\n" + "\n".join(risultati)
     return None
 
-def cerca_su_internet(argomento):
-    page = wiki.page(argomento)
-    if page.exists():
-        return page.summary[:500]
-    return "Nessun risultato enciclopedico trovato su Wikipedia."
+def cerca_su_internet(query):
+    try:
+        wiki = Wikipedia(user_agent="AlmaBot/2.0 (contact: biotec@example.com)", language="it")
+        page = wiki.page(query)
+        if page.exists():
+            return page.summary[:1000]
+        return "Nessun riscontro enciclopedico trovato."
+    except:
+        return "Connessione di rete non ottimale per la ricerca esterna."
 
 # --- CERVELLO LLM DI ALMA (GROQ) ---
 def chiedi_al_cervello_di_alma(contesto_utente, prompt_utente, dati_extra="", cronologia_passata=""):
@@ -89,7 +81,7 @@ def chiedi_al_cervello_di_alma(contesto_utente, prompt_utente, dati_extra="", cr
     {cronologia_passata}
     
     Se l'utente è il tuo Creatore ({CREATORE}), mostrati estremamente leale e chiamalo 'Comandante Ciro'. Non ripetere mai che la sua identità è protetta.
-    Se l'utente è un ospite esterno, mantieni un livello di acesso limitato ma rispondi comunque in modo amichevole e accogliente.
+    Se l'utente è un ospite esterno, mantieni un livello di accesso limitato ma rispondi comunque in modo amichevole e accogliente.
     Usa queste informazioni aggiuntive solo se strettamente pertinenti alla richiesta: {dati_extra}.
     Sii chiara, pronta all'interazione e lascia che la conversazione fluisca senza schemi rigidamente preimpostati.
     """
@@ -107,27 +99,87 @@ def chiedi_al_cervello_di_alma(contesto_utente, prompt_utente, dati_extra="", cr
     except Exception as e:
         return f"Sotto controllo. Errore di connessione neuronale: {str(e)}"
 
-# --- INTERFACCIA GRAFICA STREAMLIT CON CRONOLOGIA ---
-st.title(f"🚀 {AZIENDA} - SISTEMA CENTRALE INTEGRATO {NOME_IA} v2.0")
-st.write("---")
+# --- INTERFACCIA UTENTE (STREAMLIT) ---
 
-# Barra laterale per informazioni utente e statistiche
+st.title(f"🚀 {AZIENDA} - SISTEMA CENTRALE INTEGRATO {NOME_IA} v2.0")
+st.markdown("---")
+
+# BARRA LATERALE (SIDEBAR)
 with st.sidebar:
     st.header("⚙️ Pannello di Controllo")
     input_nome = st.text_input("Identificativo Operatore:", value="", placeholder="Inserisci il tuo nome...", key="nome_utente_unico")
-    chi_parla = input_nome.strip().title()
     
-    if chi_parla == CREATORE.title():
-        st.success("🛡️ Comandante Ciro online.")
+    chi_parla = input_nome.strip() if input_nome.strip() else "Ospite"
+    
+    if chi_parla.lower() in ["ciro", "iuliano ciro", "comandante", "comandante ciro"]:
+        chi_parla = CREATORE
+        st.success(f"🛡️ {chi_parla} online.")
     else:
-        st.warning(f"⚠️ Accesso ospite: {chi_parla}")
+        st.info(f"👤 Modalità Ospite: {chi_parla}")
         
-    num_esperienze = analizza_apprendimento(chi_parla)
-    st.metric(label="Sintonizzazione Sistema", value=f"{min(10 + (num_esperienze * 5), 99)}%")
-    st.caption(f"Interazioni registrate: {num_esperienze}")
+    st.markdown("---")
+    st.subheader("Sintonizzazione Sistema")
+    st.title("10%")
+    
+    num_interazioni = conta_interazioni()
+    st.caption(f"Interazioni registrate: {num_interazioni}")
 
-# Inizializzazione dello stato della chat se non esiste
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# AREA CHAT CENTRALE (Fuori dalla Sidebar)
+# Mostra la cronologia dei messaggi della sessione corrente
+for message in st.session_state.messages:
+    if "User:" in message["content"] or f"**{chi_parla}**:" in message["content"]:
+        with st.chat_message("user"):
+            st.write(message["content"])
+    else:
+        with st.chat_message("assistant"):
+            st.write(message["content"])
 
-# Mostra i messaggi precedenti salvati nella sessione corrente
+# Input principale tramite la barra di chat nativa in basso
+if input_domanda := st.chat_input("Parla con ALMA..."):
+    
+    # Mostra il messaggio dell'utente nella chat
+    with st.chat_message("user"):
+        st.write(f"**{chi_parla}**: {input_domanda}")
+    
+    # Salva il messaggio dell'utente nella cronologia della sessione
+    st.session_state.messages.append({"role": "user", "content": f"**{chi_parla}**: {input_domanda}"})
+    
+    # Recupero memoria storica dal file prima di rispondere
+    memoria_passata = leggi_memoria_storica(chi_parla)
+    
+    messaggio = input_domanda.lower().strip()
+    risposta_base = ""
+    dati_extra_contesto = ""
+
+    # --- LOGICA DEI COMANDI ---
+    if messaggio.startswith("registra brevetto:"):
+        dati = input_domanda[18:].strip()
+        risposta_base = registra_nuovo_brevetto(dati)
+        
+    elif messaggio.startswith("cerca brevetto "):
+        chiave = input_domanda[15:].strip()
+        risultat_archivio = cerca_brevetto_archiviato(chiave)
+        if risultat_archivio:
+            risposta_base = risultat_archivio
+        else:
+            dati_extra_contesto = f"Nota: Il brevetto '{chiave}' non è presente nell'archivio privato."
+            risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, dati_extra_contesto, memoria_passata)
+            
+    elif messaggio.startswith("cerca "):
+        argomento = input_domanda[6:].strip()
+        dati_ricerca = cerca_su_internet(argomento)
+        risposta_base = chiedi_al_cervello_di_alma(chi_parla, f"Spiegami questo argomento: {argomento}", f"Dati enciclopedici trovati: {dati_ricerca}", memoria_passata)
+        
+    else:
+        risposta_base = chiedi_al_cervello_di_alma(chi_parla, input_domanda, "Sistemi operativi ottimizzati e pronti.", memoria_passata)
+
+    # Mostra la risposta di ALMA nel fumetto dell'assistente
+    with st.chat_message("assistant"):
+        testo_risposta = f"**[{NOME_IA}]**: {risposta_base}"
+        st.write(testo_risposta)
+        
+    # Salva la risposta di ALMA nella cronologia della sessione
+    st.session_state.messages.append({"role": "assistant", "content": testo_risposta})
+    
+    # Salvataggio su file di testo per la memoria a lungo termine
+    salva_in_memoria(chi_parla, input_domanda, risposta_base)
